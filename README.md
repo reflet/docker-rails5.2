@@ -1,67 +1,91 @@
-# Ruby2.3 + MySQL + Redis
-docker-composeコマンドを使っての操作方法を記載します。
+## Ruby on Rails5.2環境
+ローカル環境の構築について記載します。
 
-## コンテナ起動
-下記のコマンドにてコンテナを起動します。
+　
+ 
+### ■ 前提条件
+ローカル環境に下記ソフトウェアをインストールしていること
+* [Docker Toolbox](hhttp://docs.docker.jp/mac/step_one.html)
 
-```
-$ git clone git@github.com:reflet/server-ruby2.3-mysql-redis.git .
-$ docker-compose build
-$ docker-compose up -d
-```
+※ ちなみに、Dockerが使える環境であれば上記ツールに限定されません。
 
-## bundleインストール
-bundle installコマンドにて、railsをインストールする。
-
-```
-$ docker exec ruby bundle install
-```
-
-## railsアプリ作成
-下記コマンドで、新規アプリを作成します。
+　
+ 
+### ■ ファイルの配置
+gitコマンドにてファイルを配置します。
 
 ```
-$ docker exec ruby bundle exec rails new . --force --database=mysql
+$ mkdir -p ~/rails5.2 && cd ~/rails5.2
+$ git clone git@github.com:reflet/docker-rails5.2.git .
 ```
 
-※ bundle installを実行したくないときは「--skip-bundle」オプションを追加する
+　
 
-一部Gemfileを修正する
-
-```
-$ docker exec -it ruby bash
-$ vim Gemfile
-
-　　修正前)
-　　# gem 'therubyracer', platforms: :ruby
-
-　　　　　　　　　　↓↓↓↓↓↓
-　　修正後)
-　　gem 'therubyracer', platforms: :ruby
-
-$ exit
-```
-
-bundle updateを実行
+### ■ コンテナ起動
+下記コマンドでdockerコンテナを起動します。
 
 ```
-$ docker exec ruby bundle update
+$ docker-compose up -d --build
 ```
 
-## サーバ起動
-下記のコマンドにてサーバを3000ポートで起動する。
+　
+### マイグレーション
+データベースにマイグレーションを実行したい場合は、下記のコマンドで実行できます。
 
 ```
-$ docker exec ruby bundle exec rails s -d -p 3000 -b '0.0.0.0'
+$ docker-compose exec rails rake db:migrate
 ```
 
-dockerで3000ポートを80ポートに接続しているので、ブラウザで下記URLにアクセスしてみる。
+　
+
+### 動作確認
+ブラウザでアクセスしてみる。
+
+```ｓｈ
+192.168.99.100
+```
+
+　
+
+### ruby on railsの各種操作
+railsコマンドで操作できる各種コマンドを実行したい場合は、下記のように実行できます。
 
 ```
-http://192.168.33.10/
+# Gemfileを変更した時のりライブラリ更新
+$ docker-compose exec rails bundle update
+
+# データベース作成
+$ docker-compose exec rails rake db:create
+
+# マイグレーション実行
+$ docker-compose exec rails rake db:migrate
+
+# アセットのプリコンパイルを行う
+$ docker-compose exec rails rake assets:precompile
 ```
 
-※ ここ記事では、vagrantで192.168.33.10の仮想環境を使用しています。
+　
 
-※ 192.168.33.10のIPの部分は、各環境に合わせて変更ください。
+### MySQL情報
+SequelProのような好きなツールでアクセスできます。
 
+```
+HOST: 192.168.99.100
+PORT: 33306
+USER: app
+PASSWORD: development
+```
+
+　
+
+### コンテナの停止
+```
+$ docker-compose stop
+```
+
+　
+
+### コンテナの破棄
+```
+$ docker-compose down -v
+```

@@ -1,48 +1,38 @@
 version: '2'
 services:
- mysql:
-  image: mysql:5.7
-  container_name: 'mysql'
-  env_file: ./docker/.env.mysql
-  ports:
-   - '3306:3306'
-  networks:
-    vpcbr:
-      ipv4_address: 10.5.0.2
+  rails:
+    build: .
+    image: my/rails5.2
+    container_name: 'rails'
+    ports:
+      - "80:3000"
+    environment:
+      APP_DATABASE: 'example'
+      APP_DATABASE_USER: 'app'
+      APP_DATABASE_PASSWORD: 'development'
+    volumes:
+      - rails-data:/usr/local/src
+    depends_on:
+      - mysql
 
- ruby:
-  build: ./docker/
-  container_name: 'ruby'
-  command: /bin/sh -c "while true; do echo hello world; sleep 1; done"
-  volumes:
-    - ./www:/app
-  ports:
-    - "80:3000"
-  links:
-    - redis
-  environment:
-    - REDIS_HOST=redis
-    - REDIS_PORT=6379
-  networks:
-    vpcbr:
-      ipv4_address: 10.5.0.3
-
- redis:
-  image: redis:latest
-  container_name: 'rails'
-  networks:
-    vpcbr:
-     ipv4_address: 10.5.0.4
+  mysql:
+    image: mysql:5.7
+    container_name: 'mysql'
+    environment:
+      MYSQL_ROOT_PASSWORD: 'mysql'
+      MYSQL_DATABASE: 'example'
+      MYSQL_USER: 'app'
+      MYSQL_PASSWORD: 'development'
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql-data:/var/lib/mysql
 
 volumes:
+  rails-data:
+    driver_opts:
+      type: none
+      device: ${PWD}/src/
+      o: bind
   mysql-data:
     driver: local
-
-networks:
-  vpcbr:
-    driver: bridge
-    ipam:
-     config:
-       - subnet: 10.5.0.0/16
-         gateway: 10.5.0.1
-
