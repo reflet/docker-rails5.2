@@ -12,6 +12,10 @@ services:
       APP_DATABASE_PASSWORD: 'development'
     volumes:
       - rails-data:/usr/local/src
+      # exclude volumes
+      - /usr/local/src/app/vendor
+      - /usr/local/src/app/tmp
+      - /usr/local/src/app/log
     depends_on:
       - mysql
 
